@@ -24,6 +24,9 @@ exports.signup = async (req, res) => {
 			username,
 			email,
 			password: await bcrypt.hash(password, saltRounds),
+			profileImage,
+			bio,
+			quote,
 		});
 
 		res.status(201).json({
