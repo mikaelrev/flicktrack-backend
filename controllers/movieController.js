@@ -1,5 +1,4 @@
 const axios = require("axios");
-const Movie = require("../models/movieModel");
 const User = require("../models/userModel");
 
 const TMDB_API_KEY = process.env.TMDB_API_KEY;
