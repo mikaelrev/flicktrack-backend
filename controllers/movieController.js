@@ -36,8 +36,6 @@ exports.getMovie = async (req, res) => {
 				params: {
 					api_key: TMDB_API_KEY,
 					language: "en-US",
-					Authorization:
-						"Bearer eyJhbGciOiJIUzI1NiJ9.eyJhdWQiOiIxZjM4YzlhYmE1YWY2NTNmZmNjMTQwZWUxNzg5Mjk1MiIsIm5iZiI6MTczNzcyMzA2My4wMTIsInN1YiI6IjY3OTM4Y2I3MDhjMTcyOWVjOTE4NTVlYiIsInNjb3BlcyI6WyJhcGlfcmVhZCJdLCJ2ZXJzaW9uIjoxfQ.VB_6eCg9ofCsBClCU2iPoMncrTIcp4mjEU537N8l2Uw",
 				},
 			}
 		);
