@@ -1,5 +1,6 @@
 const axios = require("axios");
 const User = require("../models/userModel");
+const Movie = require("../models/movieModel");
 
 const TMDB_API_KEY = process.env.TMDB_API_KEY;
 
@@ -49,28 +50,48 @@ exports.getMovie = async (req, res) => {
 
 exports.addOrRemoveFromChecked = async (req, res) => {
 	try {
-		const userId = req.user._id;
+		const userId = req.params.userId;
 		const movieId = req.params.movieId;
 
 		const user = await User.findById(userId);
+		if (!user) {
+			return res.status(404).json({ message: "User not found" });
+		}
 
-		const isMovieChecked = user.checkedMovies.includes(movieId);
+		const isMovieChecked = user.checkedMovies.some(
+			(checkedMovie) => checkedMovie.tmdbId === movieId
+		);
 
 		if (isMovieChecked) {
-			await User.findByIdAndUpdate(
-				userId,
-				{ $pull: { checkedMovies: movieId } },
-				{ new: true }
+			// Remove movie from checked list
+			user.checkedMovies = user.checkedMovies.filter(
+				(checkedMovie) => checkedMovie.tmdbId !== movieId
 			);
+			await user.save();
 			return res
 				.status(200)
 				.json({ message: "Movie removed from checked list" });
 		} else {
-			await User.findByIdAndUpdate(
-				userId,
-				{ $push: { checkedMovies: movieId } },
-				{ new: true }
+			// Fetch movie details from TMDb
+			const movieResponse = await axios.get(
+				`https://api.themoviedb.org/3/movie/${movieId}`,
+				{
+					params: { api_key: TMDB_API_KEY, language: "en-US" },
+				}
 			);
+
+			const movie = movieResponse.data;
+
+			// Store movie details in the user's checked list
+			user.checkedMovies.push({
+				tmdbId: movieId,
+				title: movie.title,
+				posterUrl: `https://image.tmdb.org/t/p/w500${movie.poster_path}`,
+				releaseDate: movie.release_date,
+				genres: movie.genres.map((genre) => genre.name),
+			});
+
+			await user.save();
 			return res.status(200).json({ message: "Movie added to checked list" });
 		}
 	} catch (error) {

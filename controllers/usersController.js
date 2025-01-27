@@ -29,10 +29,13 @@ exports.getUser = async (req, res) => {
 
 exports.getUserCheckedMovies = async (req, res) => {
 	try {
-		const id = req.params.userId;
-		const user = await User.findById(id);
+		const userId = req.params.userId;
+		const user = await User.findById(userId).populate("checkedMovies");
 
-		const userCheckedMovies = user.checkedMovies;
+		const userCheckedMovies = await Movie.find({
+			_id: { $in: user.checkedMovies },
+		});
+
 		res.status(200).json({ message: "success", userCheckedMovies });
 	} catch (error) {
 		console.error(error);
