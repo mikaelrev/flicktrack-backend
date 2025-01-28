@@ -15,4 +15,9 @@ router.post(
 	movieController.addOrRemoveFromChecked
 );
 
+router.post(
+	"/:userId/movies/:movieId/favorites",
+	movieController.addOrRemoveFromFavorites
+);
+
 module.exports = router;

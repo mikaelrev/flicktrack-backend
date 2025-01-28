@@ -110,11 +110,17 @@ exports.addOrRemoveFromChecked = async (req, res) => {
 				.slice(0, 5)
 				.map((actor) => actor.name);
 
+			const director = castResponse.data.crew.find(
+				(person) => person.job === "Director"
+			);
+
+			const directorName = director ? director.name : "Unknown";
+
 			movie = new Movie({
 				tmdbId,
 				title: movieData.title,
 				releaseYear: parseInt(movieData.release_date.split("-")[0]),
-				directedBy: movieData.director || "Unknown",
+				directedBy: directorName,
 				runtime: movieData.runtime,
 				genre: movieData.genres.map((genre) => genre.name),
 				actors,
@@ -161,32 +167,89 @@ exports.addOrRemoveFromChecked = async (req, res) => {
 
 exports.addOrRemoveFromFavorites = async (req, res) => {
 	try {
-		const userId = req.user._id;
-		const movieId = req.params.movieId;
+		const userId = req.params.userId;
+		const tmdbId = req.params.movieId;
 
 		const user = await User.findById(userId);
+		if (!user) {
+			return res.status(404).json({ message: "User not found" });
+		}
 
-		const isMovieFavorited = user.favoriteMovies.includes(movieId);
+		let movie = await Movie.findOne({ tmdbId });
 
-		if (isMovieFavorited) {
-			await User.findByIdAndUpdate(
-				userId,
-				{ $pull: { favoriteMovies: movieId } },
-				{ new: true }
+		if (!movie) {
+			const movieResponse = await axios.get(
+				`https://api.themoviedb.org/3/movie/${tmdbId}`,
+				{
+					params: { api_key: TMDB_API_KEY, language: "en-US" },
+				}
 			);
-			return res.status(200).json({ message: "Movie removed from favorites" });
+
+			const movieData = movieResponse.data;
+
+			const castResponse = await axios.get(
+				`https://api.themoviedb.org/3/movie/${tmdbId}/credits`,
+				{
+					params: { api_key: TMDB_API_KEY, language: "en-US" },
+				}
+			);
+
+			const actors = castResponse.data.cast
+				.slice(0, 5)
+				.map((actor) => actor.name);
+
+			const director = castResponse.data.crew.find(
+				(person) => person.job === "Director"
+			);
+
+			const directorName = director ? director.name : "Unknown";
+
+			movie = new Movie({
+				tmdbId,
+				title: movieData.title,
+				releaseYear: parseInt(movieData.release_date.split("-")[0]),
+				directedBy: directorName || "Unknown",
+				runtime: movieData.runtime,
+				genre: movieData.genres.map((genre) => genre.name),
+				actors,
+				posterUrl: `https://image.tmdb.org/t/p/w500${movieData.poster_path}`,
+			});
+
+			await movie.save();
+		}
+
+		const isMovieFavorite = user.favoriteMovies.some(
+			(favoriteMovie) => favoriteMovie.toString() === movie._id.toString()
+		);
+
+		if (isMovieFavorite) {
+			user.favoriteMovies = user.favoriteMovies.filter(
+				(favoriteMovie) => favoriteMovie.toString() !== movie._id.toString()
+			);
+
+			await user.save();
+
+			await Movie.findByIdAndUpdate(movie._id, {
+				$inc: { favoriteCount: -1 },
+			});
+
+			return res
+				.status(200)
+				.json({ message: "Movie removed from favorites list" });
 		} else {
-			await User.findByIdAndUpdate(
-				userId,
-				{ $push: { favoriteMovies: movieId } },
-				{ new: true }
-			);
-			return res.status(200).json({ message: "Movie added to favorites" });
+			user.favoriteMovies.push(movie._id);
+			await Movie.findByIdAndUpdate(movie._id, {
+				$inc: { favoriteCount: 1 },
+			});
+			await user.save();
+
+			return res.status(200).json({ message: "Movie added to favorites list" });
 		}
 	} catch (error) {
 		console.error(error);
 		res.status(500).json({
-			message: "Error when adding or removing the movie from favorites",
+			message:
+				"Error when adding or removing the movie from the favorites list",
 		});
 	}
 };
