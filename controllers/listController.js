@@ -54,6 +54,40 @@ exports.createNewUserList = async (req, res) => {
 	}
 };
 
+exports.renameList = async (req, res) => {
+	try {
+		const { userId, listId } = req.params;
+		const { newListName } = req.body;
+
+		if (!userId || !listId || !newListName) {
+			return res
+				.status(400)
+				.json({ message: "User ID, List ID, or new name is missing" });
+		}
+
+		const user = await User.findById(userId);
+		if (!user) {
+			return res.status(404).json({ message: "No user was found" });
+		}
+
+		const list = await List.findById(listId);
+		if (!list) {
+			return res.status(404).json({ message: "No list was found" });
+		}
+
+		list.name = newListName;
+
+		await list.save();
+
+		res.status(201).json({ message: "List name was updated", list });
+	} catch (error) {
+		console.error(error);
+		res
+			.status(500)
+			.json({ message: "There was an error when updating the list name" });
+	}
+};
+
 exports.addMovieToList = async (req, res) => {
 	try {
 		const userId = req.params.userId;
@@ -133,8 +167,83 @@ exports.addMovieToList = async (req, res) => {
 		res.status(200).json({ message: "Movie added to list", list });
 	} catch (error) {
 		console.error(error);
+		res.status(500).json({
+			message: "There was an error when adding the movie to the list",
+		});
+	}
+};
+
+exports.removeMovieFromList = async (req, res) => {
+	try {
+		const movieId = req.params.movieId;
+		const listId = req.params.listId;
+		const userId = req.params.userId;
+
+		if (!movieId || !listId || !userId) {
+			return res
+				.status(400)
+				.json({ message: "User, Movie ID or List ID is missing" });
+		}
+
+		const list = await List.findById(listId);
+		const user = await User.findById(userId);
+
+		if (!user) {
+			return res.status(404).json({ message: "No user was found" });
+		}
+
+		if (!list) {
+			return res.status(404).json({ message: "No list was found" });
+		}
+
+		const movieIndex = list.movies.findIndex(
+			(existingMovieId) => existingMovieId.toString() === movieId
+		);
+
+		if (movieIndex === -1) {
+			return res.status(404).json({
+				message:
+					"Movie not found in the list, or it may have already been deleted",
+			});
+		}
+
+		list.movies.splice(movieIndex, 1);
+		await list.save();
+
+		res.status(200).json({ message: "Movie removed from the list", list });
+	} catch (error) {
+		console.error(error);
+		res.status(500).json({
+			message: "There was an error when removing movie from the list",
+		});
+	}
+};
+
+exports.deleteList = async (req, res) => {
+	try {
+		const { listId, userId } = req.params;
+
+		if (!listId || !userId) {
+			return res.status(400).json({ message: "User, or List ID is missing" });
+		}
+
+		const user = await User.findById(userId);
+		if (!user) {
+			return res.status(404).json({ message: "No user was found" });
+		}
+
+		const list = await List.findById(listId);
+		if (!list) {
+			return res.status(404).json({ message: "No list was found" });
+		}
+
+		await list.deleteOne();
+
+		res.status(204).json();
+	} catch (error) {
+		console.error(error);
 		res
 			.status(500)
-			.json({ message: "There was an error adding the movie to the list" });
+			.json({ message: "There was an error when deleting the list" });
 	}
 };
