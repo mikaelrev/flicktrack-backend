@@ -1,5 +1,6 @@
 const User = require("../models/userModel");
 const bcrypt = require("bcrypt");
+const jwt = require("jsonwebtoken");
 
 exports.signup = async (req, res) => {
 	try {
@@ -18,15 +19,20 @@ exports.signup = async (req, res) => {
 				.json({ message: "User with this email already exists" });
 		}
 
-		const saltRounds = 10;
+		const salt = await bcrypt.genSalt(10);
+		const hashedPassword = await bcrypt.hash(password, salt);
 
 		const newUser = await User.create({
 			username,
 			email,
-			password: await bcrypt.hash(password, saltRounds),
+			password: hashedPassword,
 			profileImage,
 			bio,
 			quote,
+		});
+
+		const token = jwt.sign({ userId: newUser._id }, process.env.JWT_SECRET, {
+			expiresIn: process.env.JWT_EXPIRES_IN,
 		});
 
 		res.status(201).json({
@@ -36,9 +42,11 @@ exports.signup = async (req, res) => {
 				username: newUser.username,
 				email: newUser.email,
 			},
+			token,
 		});
 	} catch (error) {
 		console.error("Error creating user:", error);
+		res.status(500).json({ message: "Server error" });
 	}
 };
 
@@ -62,14 +70,20 @@ exports.login = async (req, res) => {
 
 		const isPasswordCorrect = await bcrypt.compare(password, user.password);
 		if (!isPasswordCorrect) {
-			return res.status(401).json({ message: "Incorrect email or password" });
+			return res.status(401).json({ message: "Invalid credentials" });
 		}
+
+		const token = jwt.sign({ userId: user._id }, process.env.JWT_SECRET, {
+			expiresIn: process.env.JWT_EXPIRES_IN,
+		});
 
 		res.status(200).json({
 			status: "success",
-			user: { id: user._id, name: user.username, email: user.email },
+			user: { id: user._id, username: user.username, email: user.email },
+			token,
 		});
 	} catch (error) {
 		console.error("Error logging in:", error);
+		res.status(500).json({ message: "Server error" });
 	}
 };
