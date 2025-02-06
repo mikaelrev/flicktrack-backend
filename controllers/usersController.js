@@ -1,5 +1,5 @@
+const { title } = require("process");
 const User = require("../models/userModel");
-const List = require("../models/listModel");
 
 exports.getAllUsers = async (req, res) => {
 	try {
@@ -17,7 +17,11 @@ exports.getAllUsers = async (req, res) => {
 exports.getUser = async (req, res) => {
 	try {
 		const id = req.params.userId;
-		const user = await User.findById(id).select("-password");
+		const user = await User.findById(id)
+			.select("-password")
+			.populate("lists", "name movies")
+			.populate("checkedMovies", "title posterUrl")
+			.populate("favoriteMovies", "title posterUrl");
 
 		res.status(200).json({ message: "success", user });
 	} catch (error) {

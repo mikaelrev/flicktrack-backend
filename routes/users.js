@@ -11,31 +11,31 @@ router.get("/:userId", userController.getUser);
 
 router.get("/:userId/checked", userController.getUserCheckedMovies);
 router.post(
-	"/:userId/movies/:movieId/checked",
+	"/movies/:movieId/checked",
 	protect,
 	movieController.addOrRemoveFromChecked
 );
 
 router.get("/:userId/favorites", userController.getUserFavoriteMovies);
 router.post(
-	"/:userId/movies/:movieId/favorites",
+	"/movies/:movieId/favorites",
 	protect,
 	movieController.addOrRemoveFromFavorites
 );
 
 router.get("/:userId/lists", listController.getAllUserLists);
 
-router.post("/:userId/lists/", protect, listController.createNewUserList);
+router.post("/lists/", protect, listController.createNewUserList);
 router.post(
-	"/:userId/lists/:listId/movies/:movieId",
+	"/lists/:listId/movies/:movieId",
 	protect,
 	listController.addMovieToList
 );
-router.patch("/:userId/lists/:listId", protect, listController.renameList);
-router.delete("/:userId/lists/:listId", protect, listController.deleteList);
+router.patch("/lists/:listId", protect, listController.renameList);
+router.delete("/lists/:listId", protect, listController.deleteList);
 
 router.delete(
-	"/:userId/lists/:listId/movies/:movieId",
+	"/lists/:listId/movies/:movieId",
 	protect,
 	listController.removeMovieFromList
 );

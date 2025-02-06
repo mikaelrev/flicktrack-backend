@@ -28,7 +28,7 @@ exports.getAllUserLists = async (req, res) => {
 
 exports.createNewUserList = async (req, res) => {
 	try {
-		const userId = req.params.userId;
+		const userId = req.user.userId;
 		const user = await User.findById(userId);
 		const { name } = req.body;
 
@@ -45,6 +45,9 @@ exports.createNewUserList = async (req, res) => {
 
 		const newList = await List.create({ name: name, owner: userId });
 
+		user.lists.push(newList._id);
+		await user.save();
+
 		res.status(201).json({ message: "success", newList });
 	} catch (error) {
 		console.error(error);
@@ -56,7 +59,8 @@ exports.createNewUserList = async (req, res) => {
 
 exports.renameList = async (req, res) => {
 	try {
-		const { userId, listId } = req.params;
+		const userId = req.user.userId;
+		const { listId } = req.params;
 		const { newListName } = req.body;
 
 		if (!userId || !listId || !newListName) {
@@ -90,7 +94,7 @@ exports.renameList = async (req, res) => {
 
 exports.addMovieToList = async (req, res) => {
 	try {
-		const userId = req.params.userId;
+		const userId = req.user.userId;
 		const listId = req.params.listId;
 		const tmdbId = req.params.movieId;
 
@@ -177,7 +181,7 @@ exports.removeMovieFromList = async (req, res) => {
 	try {
 		const movieId = req.params.movieId;
 		const listId = req.params.listId;
-		const userId = req.params.userId;
+		const userId = req.user.userId;
 
 		if (!movieId || !listId || !userId) {
 			return res
@@ -221,7 +225,8 @@ exports.removeMovieFromList = async (req, res) => {
 
 exports.deleteList = async (req, res) => {
 	try {
-		const { listId, userId } = req.params;
+		const userId = req.user.userId;
+		const { listId } = req.params;
 
 		if (!listId || !userId) {
 			return res.status(400).json({ message: "User, or List ID is missing" });

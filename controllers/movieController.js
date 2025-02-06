@@ -79,7 +79,7 @@ exports.getMovie = async (req, res) => {
 
 exports.addOrRemoveFromChecked = async (req, res) => {
 	try {
-		const userId = req.params.userId;
+		const userId = req.user.userId;
 		const tmdbId = req.params.movieId;
 
 		const user = await User.findById(userId);
@@ -167,7 +167,7 @@ exports.addOrRemoveFromChecked = async (req, res) => {
 
 exports.addOrRemoveFromFavorites = async (req, res) => {
 	try {
-		const userId = req.params.userId;
+		const userId = req.user.userId;
 		const tmdbId = req.params.movieId;
 
 		const user = await User.findById(userId);
