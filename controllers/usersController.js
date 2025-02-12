@@ -57,11 +57,19 @@ exports.getUserCheckedMovies = async (req, res) => {
 
 exports.getUserFavoriteMovies = async (req, res) => {
 	try {
-		const id = req.params.userId;
-		const user = await User.findById(id);
+		const userId = req.params.userId;
 
-		const userFavoriteMovies = user.favoriteMovies;
-		res.status(200).json({ message: "success", userFavoriteMovies });
+		const user = await User.findById(userId).populate(
+			"favoriteMovies",
+			"tmdbId title posterUrl"
+		);
+		if (!user) {
+			return res.status(404).json({ message: "User not found" });
+		}
+
+		res
+			.status(200)
+			.json({ message: "success", favoriteMovies: user.favoriteMovies });
 	} catch (error) {
 		console.error(error);
 		res

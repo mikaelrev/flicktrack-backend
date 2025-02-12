@@ -10,17 +10,23 @@ router.get("/", userController.getAllUsers);
 router.get("/:userId", userController.getUser);
 
 router.get("/:userId/checked", userController.getUserCheckedMovies);
-router.post(
+router.post("/movies/:movieId/checked", protect, movieController.addToChecked);
+router.delete(
 	"/movies/:movieId/checked",
 	protect,
-	movieController.addOrRemoveFromChecked
+	movieController.removeFromChecked
 );
 
 router.get("/:userId/favorites", userController.getUserFavoriteMovies);
 router.post(
 	"/movies/:movieId/favorites",
 	protect,
-	movieController.addOrRemoveFromFavorites
+	movieController.addToFavorites
+);
+router.delete(
+	"/movies/:movieId/favorites",
+	protect,
+	movieController.removeFromFavorites
 );
 
 router.get("/:userId/lists", listController.getAllUserLists);
