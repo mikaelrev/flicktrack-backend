@@ -44,7 +44,7 @@ exports.getMovie = async (req, res) => {
 				}
 			);
 
-			const movie = response.data;
+			const movieData = response.data;
 			const castResponse = await axios.get(
 				`https://api.themoviedb.org/3/movie/${tmdbId}/credits`,
 				{
@@ -56,11 +56,17 @@ exports.getMovie = async (req, res) => {
 				.splice(0, 5)
 				.map((actor) => actor.name);
 
+			const director = castResponse.data.crew.find(
+				(person) => person.job === "Director"
+			);
+
+			const directorName = director ? director.name : "Unknown";
+
 			movie = new Movie({
 				tmdbId,
 				title: movieData.title,
 				releaseYear: parseInt(movieData.release_date.split("-")[0]),
-				directedBy: movieData.director || "Unknown",
+				directedBy: directorName,
 				runtime: movieData.runtime,
 				genre: movieData.genres.map((genre) => genre.name),
 				actors,
@@ -72,8 +78,14 @@ exports.getMovie = async (req, res) => {
 
 		res.status(200).json(movie);
 	} catch (error) {
-		console.error(error);
-		res.status(500).json({ message: "Error fetching the movie from TMDb" });
+		if (error.code === 11000) {
+			console.log(`Duplicate movie entry for tmdbId: ${req.params.movieId}`);
+			const movie = await Movie.findOne({ tmdbId: req.params.movieId });
+			res.status(200).json(movie);
+		} else {
+			console.error(error);
+			res.status(500).json({ message: "Error fetching the movie from TMDb" });
+		}
 	}
 };
 

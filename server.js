@@ -10,6 +10,9 @@ dotenv.config({ path: "./config.env" });
 app.use(logger("dev"));
 app.use(express.json());
 
+const cors = require("cors");
+app.use(cors());
+
 const DB = process.env.DATABASE.replace(
 	"<PASSWORD>",
 	process.env.DATABASE_PASSWORD
