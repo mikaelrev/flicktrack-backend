@@ -5,6 +5,21 @@ const Movie = require("../models/movieModel");
 
 const TMDB_API_KEY = process.env.TMDB_API_KEY;
 
+exports.getAllLists = async (req, res) => {
+	try {
+		const lists = await List.find().populate("movies", "title posterUrl");
+
+		if (!lists) {
+			return res.status(404).json({ message: "No lists was found" });
+		}
+
+		res.status(200).json({ message: "success", lists });
+	} catch (error) {
+		console.error(error);
+		res.status(500).json({ message: "There was an error fethching lists" });
+	}
+};
+
 exports.getAllUserLists = async (req, res) => {
 	try {
 		const userId = req.params.userId;
@@ -22,7 +37,9 @@ exports.getAllUserLists = async (req, res) => {
 		res.status(200).json({ message: "success", lists });
 	} catch (error) {
 		console.error(error);
-		res.status(500).json({ message: "There was an error fethching lists" });
+		res
+			.status(500)
+			.json({ message: "There was an error fethching the user's lists" });
 	}
 };
 

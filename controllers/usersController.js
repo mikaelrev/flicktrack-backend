@@ -19,7 +19,13 @@ exports.getUser = async (req, res) => {
 		const id = req.params.userId;
 		const user = await User.findById(id)
 			.select("-password")
-			.populate("lists", "name movies")
+			.populate({
+				path: "lists",
+				populate: {
+					path: "movies",
+					select: "title posterUrl",
+				},
+			})
 			.populate("checkedMovies", "title posterUrl")
 			.populate("favoriteMovies", "title posterUrl");
 
