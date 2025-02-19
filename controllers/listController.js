@@ -7,7 +7,9 @@ const TMDB_API_KEY = process.env.TMDB_API_KEY;
 
 exports.getAllLists = async (req, res) => {
 	try {
-		const lists = await List.find().populate("movies", "title posterUrl");
+		const lists = await List.find()
+			.populate("movies", "title posterUrl")
+			.populate("owner", "username");
 
 		if (!lists) {
 			return res.status(404).json({ message: "No lists was found" });
@@ -40,6 +42,23 @@ exports.getAllUserLists = async (req, res) => {
 		res
 			.status(500)
 			.json({ message: "There was an error fethching the user's lists" });
+	}
+};
+
+exports.getSingleList = async (req, res) => {
+	try {
+		const listId = req.params.listId;
+
+		const list = await List.findOne({ _id: listId })
+			.populate("movies", "title posterUrl")
+			.populate("owner", "username");
+
+		console.log(list);
+
+		res.status(200).json({ message: "success", list });
+	} catch (error) {
+		console.error(error);
+		res.status(500).json({ message: "There was an error fetching the list" });
 	}
 };
 

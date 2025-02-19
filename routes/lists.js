@@ -4,8 +4,6 @@ const listController = require("../controllers/listController");
 
 router.get("/", listController.getAllLists);
 
-router.get("/:listId", () => {
-	console.log("These are the lists");
-});
+router.get("/:listId", listController.getSingleList);
 
 module.exports = router;
