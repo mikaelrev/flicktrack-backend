@@ -9,7 +9,7 @@ exports.getAllLists = async (req, res) => {
 	try {
 		const lists = await List.find()
 			.populate("movies", "title posterUrl")
-			.populate("owner", "username");
+			.populate("owner", "username profileImage");
 
 		if (!lists) {
 			return res.status(404).json({ message: "No lists was found" });
