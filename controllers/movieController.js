@@ -29,13 +29,18 @@ exports.getPopularMovies = async (req, res) => {
 
 exports.getMovie = async (req, res) => {
 	try {
-		const tmdbId = req.params.movieId;
+		const movieId = req.params.movieId;
 
-		let movie = await Movie.findOne({ tmdbId });
+		let movie;
+		if (movieId.length === 24) {
+			movie = await Movie.findById(movieId);
+		} else {
+			movie = await Movie.findOne({ tmdbId: movieId });
+		}
 
 		if (!movie) {
 			const response = await axios.get(
-				`https://api.themoviedb.org/3/movie/${tmdbId}`,
+				`https://api.themoviedb.org/3/movie/${movieId}`,
 				{
 					params: {
 						api_key: TMDB_API_KEY,
@@ -46,7 +51,7 @@ exports.getMovie = async (req, res) => {
 
 			const movieData = response.data;
 			const castResponse = await axios.get(
-				`https://api.themoviedb.org/3/movie/${tmdbId}/credits`,
+				`https://api.themoviedb.org/3/movie/${movieId}/credits`,
 				{
 					params: { api_key: TMDB_API_KEY, language: "en-US" },
 				}
@@ -63,7 +68,7 @@ exports.getMovie = async (req, res) => {
 			const directorName = director ? director.name : "Unknown";
 
 			movie = new Movie({
-				tmdbId,
+				tmdbId: movieData.id,
 				title: movieData.title,
 				releaseYear: parseInt(movieData.release_date.split("-")[0]),
 				directedBy: directorName,

@@ -132,9 +132,9 @@ exports.addMovieToList = async (req, res) => {
 	try {
 		const userId = req.user.userId;
 		const listId = req.params.listId;
-		const tmdbId = req.params.movieId;
+		const movieId = req.params.movieId;
 
-		if (!userId || !listId || !tmdbId) {
+		if (!userId || !listId || !movieId) {
 			return res
 				.status(400)
 				.json({ message: "User, List, or Movie ID is missing" });
@@ -142,7 +142,6 @@ exports.addMovieToList = async (req, res) => {
 
 		const user = await User.findById(userId);
 		const list = await List.findById(listId);
-		let movie = await Movie.findOne({ tmdbId });
 
 		if (!user) {
 			return res.status(404).json({ message: "No user was found" });
@@ -152,9 +151,16 @@ exports.addMovieToList = async (req, res) => {
 			return res.status(404).json({ message: "No list was found" });
 		}
 
+		let movie;
+		if (movieId.length === 24) {
+			movie = await Movie.findById(movieId);
+		} else {
+			movie = await Movie.findOne({ tmdbId: movieId });
+		}
+
 		if (!movie) {
 			const movieResponse = await axios.get(
-				`https://api.themoviedb.org/3/movie/${tmdbId}`,
+				`https://api.themoviedb.org/3/movie/${movieId}`,
 				{
 					params: { api_key: TMDB_API_KEY, language: "en-US" },
 				}
@@ -163,7 +169,7 @@ exports.addMovieToList = async (req, res) => {
 			const movieData = movieResponse.data;
 
 			const castResponse = await axios.get(
-				`https://api.themoviedb.org/3/movie/${tmdbId}/credits`,
+				`https://api.themoviedb.org/3/movie/${movieId}/credits`,
 				{
 					params: { api_key: TMDB_API_KEY, language: "en-US" },
 				}
@@ -180,7 +186,7 @@ exports.addMovieToList = async (req, res) => {
 			const directorName = director ? director.name : "Unknown";
 
 			movie = new Movie({
-				tmdbId,
+				tmdbId: movieData.id,
 				title: movieData.title,
 				releaseYear: parseInt(movieData.release_date.split("-")[0]),
 				directedBy: directorName,
