@@ -284,6 +284,12 @@ exports.deleteList = async (req, res) => {
 			return res.status(404).json({ message: "No list was found" });
 		}
 
+		if (list.owner.toString() !== userId) {
+			return res
+				.status(403)
+				.json({ message: "You do not have permission to delete this list" });
+		}
+
 		await list.deleteOne();
 
 		res.status(204).json();
