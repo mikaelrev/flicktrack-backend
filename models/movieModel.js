@@ -11,6 +11,7 @@ const movieSchema = new mongoose.Schema({
 	posterUrl: { type: String },
 	checkedCount: { type: Number, default: 0 },
 	favoriteCount: { type: Number, default: 0 },
+	comments: [{ type: mongoose.Schema.Types.ObjectId, ref: "Comment" }],
 });
 
 const Movie = mongoose.model("Movie", movieSchema);
