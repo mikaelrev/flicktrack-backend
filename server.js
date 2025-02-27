@@ -30,11 +30,13 @@ const usersRouter = require("./routes/users");
 const moviesRouter = require("./routes/movies");
 const listsRouter = require("./routes/lists");
 const commentsRouter = require("./routes/comments");
+const activitiesRouter = require("./routes/activities");
 
 app.use("/auth", authRouter);
 app.use("/users", usersRouter);
 app.use("/movies", moviesRouter);
 app.use("/lists", listsRouter);
 app.use("/comments", commentsRouter);
+app.use("/activities", activitiesRouter);
 
 app.listen(port, () => console.log(`Server has started on port: ${port}`));

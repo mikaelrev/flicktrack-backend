@@ -1,6 +1,7 @@
 const axios = require("axios");
 const User = require("../models/userModel");
 const Movie = require("../models/movieModel");
+const ActivityTracker = require("../models/activityTrackerModel");
 
 const TMDB_API_KEY = process.env.TMDB_API_KEY;
 
@@ -130,6 +131,12 @@ exports.addToChecked = async (req, res) => {
 		});
 
 		await user.save();
+
+		await ActivityTracker.create({
+			user: userId,
+			activity: "checked",
+			targetMovie: movie._id,
+		});
 
 		return res.status(200).json({ message: "Movie added to checked list" });
 	} catch (error) {
