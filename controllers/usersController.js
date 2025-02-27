@@ -27,7 +27,11 @@ exports.getUser = async (req, res) => {
 				},
 			})
 			.populate("checkedMovies", "title posterUrl")
-			.populate("favoriteMovies", "title posterUrl");
+			.populate("favoriteMovies", "title posterUrl")
+			.populate({
+				path: "comments",
+				populate: { path: "movie", select: "title posterUrl" },
+			});
 
 		res.status(200).json({ message: "success", user });
 	} catch (error) {

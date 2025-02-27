@@ -11,6 +11,7 @@ const userSchema = new mongoose.Schema({
 	lists: [{ type: mongoose.Schema.Types.ObjectId, ref: "List" }],
 	checkedMovies: [{ type: mongoose.Schema.Types.ObjectId, ref: "Movie" }],
 	favoriteMovies: [{ type: mongoose.Schema.Types.ObjectId, ref: "Movie" }],
+	comments: [{ type: mongoose.Schema.Types.ObjectId, ref: "Comment" }],
 });
 
 const User = mongoose.model("User", userSchema);

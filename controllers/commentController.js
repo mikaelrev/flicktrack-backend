@@ -1,3 +1,4 @@
+const User = require("../models/userModel");
 const Comment = require("../models/commentModel");
 const Movie = require("../models/movieModel");
 
@@ -19,6 +20,10 @@ exports.addComment = async (req, res) => {
 		await newComment.save();
 
 		await Movie.findByIdAndUpdate(movieId, {
+			$push: { comments: newComment._id },
+		});
+
+		await User.findByIdAndUpdate(userId, {
 			$push: { comments: newComment._id },
 		});
 
