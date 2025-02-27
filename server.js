@@ -29,10 +29,12 @@ const authRouter = require("./routes/auth");
 const usersRouter = require("./routes/users");
 const moviesRouter = require("./routes/movies");
 const listsRouter = require("./routes/lists");
+const commentsRouter = require("./routes/comments");
 
 app.use("/auth", authRouter);
 app.use("/users", usersRouter);
 app.use("/movies", moviesRouter);
 app.use("/lists", listsRouter);
+app.use("/comments", commentsRouter);
 
 app.listen(port, () => console.log(`Server has started on port: ${port}`));

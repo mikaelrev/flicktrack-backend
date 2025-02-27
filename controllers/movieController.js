@@ -35,7 +35,10 @@ exports.getMovie = async (req, res) => {
 		if (movieId.length === 24) {
 			movie = await Movie.findById(movieId);
 		} else {
-			movie = await Movie.findOne({ tmdbId: movieId });
+			movie = await Movie.findOne({ tmdbId: movieId }).populate({
+				path: "comments",
+				populate: { path: "user", select: "username profileImage" },
+			});
 		}
 
 		if (!movie) {
@@ -67,18 +70,20 @@ exports.getMovie = async (req, res) => {
 
 			const directorName = director ? director.name : "Unknown";
 
-			movie = new Movie({
-				tmdbId: movieData.id,
-				title: movieData.title,
-				releaseYear: parseInt(movieData.release_date.split("-")[0]),
-				directedBy: directorName,
-				runtime: movieData.runtime,
-				genre: movieData.genres.map((genre) => genre.name),
-				actors,
-				posterUrl: `https://image.tmdb.org/t/p/w500${movieData.poster_path}`,
-			});
-
-			await movie.save();
+			movie = await Movie.findOneAndUpdate(
+				{ tmdbId: movieData.id },
+				{
+					tmdbId: movieData.id,
+					title: movieData.title,
+					releaseYear: parseInt(movieData.release_date.split("-")[0]),
+					directedBy: directorName,
+					runtime: movieData.runtime,
+					genre: movieData.genres.map((genre) => genre.name),
+					actors,
+					posterUrl: `https://image.tmdb.org/t/p/w500${movieData.poster_path}`,
+				},
+				{ new: true, upsert: true }
+			);
 		}
 
 		res.status(200).json(movie);
