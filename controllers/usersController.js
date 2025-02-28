@@ -87,3 +87,71 @@ exports.getUserFavoriteMovies = async (req, res) => {
 			.json({ message: "There was an error getting the user favorite movies" });
 	}
 };
+
+exports.followUser = async (req, res) => {
+	try {
+		const { userId } = req.params; // User to be followed
+		const appUserId = req.user.userId; // Authenticated user (who is following)
+
+		if (!userId) {
+			return res.status(400).json({ message: "No user ID found" });
+		}
+
+		if (userId === appUserId) {
+			return res.status(400).json({ message: "You cannot follow yourself" });
+		}
+
+		const updatedUser = await User.findByIdAndUpdate(
+			appUserId,
+			{ $addToSet: { following: userId } },
+			{ new: true }
+		).select("-password");
+
+		await User.findByIdAndUpdate(
+			userId,
+			{ $addToSet: { followers: appUserId } },
+			{ new: true }
+		);
+
+		return res
+			.status(200)
+			.json({ message: "Successfully followed the user", updatedUser });
+	} catch (error) {
+		console.error(error);
+		res.status(500).json({ message: "Error when trying to follow user" });
+	}
+};
+
+exports.unfollowUser = async (req, res) => {
+	try {
+		const { userId } = req.params;
+		const appUserId = req.user.userId;
+
+		if (!userId) {
+			return res.status(400).json({ message: "No user ID found" });
+		}
+
+		if (userId === appUserId) {
+			return res.status(400).json({ message: "You cannot unfollow yourself" });
+		}
+
+		const updatedUser = await User.findByIdAndUpdate(
+			appUserId,
+			{ $pull: { following: userId } },
+			{ new: true }
+		).select("-password");
+
+		await User.findByIdAndUpdate(
+			userId,
+			{ $pull: { followers: appUserId } },
+			{ new: true }
+		);
+
+		return res
+			.status(200)
+			.json({ message: "Successfully unfollowed the user", updatedUser });
+	} catch (error) {
+		console.error(error);
+		res.status(500).json({ message: "Error when trying to unfollow user" });
+	}
+};

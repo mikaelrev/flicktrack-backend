@@ -46,4 +46,7 @@ router.delete(
 	listController.removeMovieFromList
 );
 
+router.post("/:userId/follow", protect, userController.followUser);
+router.post("/:userId/unfollow", protect, userController.unfollowUser);
+
 module.exports = router;
