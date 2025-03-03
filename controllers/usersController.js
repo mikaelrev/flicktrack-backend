@@ -30,7 +30,8 @@ exports.getUser = async (req, res) => {
 			.populate("favoriteMovies", "title posterUrl")
 			.populate({
 				path: "comments",
-				populate: { path: "movie", select: "title posterUrl" },
+				populate: { path: "movie", select: "tmdbId title posterUrl" },
+				options: { sort: { createdAt: -1 } },
 			});
 
 		res.status(200).json({ message: "success", user });

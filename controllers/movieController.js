@@ -39,6 +39,7 @@ exports.getMovie = async (req, res) => {
 			movie = await Movie.findOne({ tmdbId: movieId }).populate({
 				path: "comments",
 				populate: { path: "user", select: "username profileImage" },
+				options: { sort: { createdAt: -1 } },
 			});
 		}
 
