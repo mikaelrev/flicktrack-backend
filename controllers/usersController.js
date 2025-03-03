@@ -46,10 +46,10 @@ exports.getUserCheckedMovies = async (req, res) => {
 	try {
 		const userId = req.params.userId;
 
-		const user = await User.findById(userId).populate(
-			"checkedMovies",
-			"tmdbId title posterUrl"
-		);
+		const user = await User.findById(userId).populate({
+			path: "checkedMovies",
+			select: "tmdbId title posterUrl",
+		});
 		if (!user) {
 			return res.status(404).json({ message: "User not found" });
 		}
