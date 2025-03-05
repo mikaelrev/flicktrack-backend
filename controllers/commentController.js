@@ -1,6 +1,7 @@
 const User = require("../models/userModel");
 const Comment = require("../models/commentModel");
 const Movie = require("../models/movieModel");
+const ActivityTracker = require("../models/activityTrackerModel");
 
 exports.addComment = async (req, res) => {
 	try {
@@ -25,6 +26,13 @@ exports.addComment = async (req, res) => {
 
 		await User.findByIdAndUpdate(userId, {
 			$push: { comments: newComment._id },
+		});
+
+		await ActivityTracker.create({
+			user: userId,
+			activity: "commented",
+			targetMovie: movieId,
+			comment: newComment._id,
 		});
 
 		res.status(201).json(newComment);

@@ -1,9 +1,7 @@
-const axios = require("axios");
 const User = require("../models/userModel");
 const List = require("../models/listModel");
 const Movie = require("../models/movieModel");
-
-const TMDB_API_KEY = process.env.TMDB_API_KEY;
+const ActivityTracker = require("../models/activityTrackerModel");
 
 exports.getAllLists = async (req, res) => {
 	try {
@@ -84,6 +82,12 @@ exports.createNewUserList = async (req, res) => {
 		user.lists.push(newList._id);
 		await user.save();
 
+		await ActivityTracker.create({
+			user: userId,
+			activity: "created_list",
+			targetList: newList._id,
+		});
+
 		res.status(201).json({ message: "success", newList });
 	} catch (error) {
 		console.error(error);
@@ -142,6 +146,9 @@ exports.addMovieToList = async (req, res) => {
 
 		const user = await User.findById(userId);
 		const list = await List.findById(listId);
+		const movie = await Movie.findOne({
+			$or: [{ _id: movieId }, { tmdbId: movieId }],
+		});
 
 		if (!user) {
 			return res.status(404).json({ message: "No user was found" });
@@ -151,64 +158,23 @@ exports.addMovieToList = async (req, res) => {
 			return res.status(404).json({ message: "No list was found" });
 		}
 
-		let movie;
-		if (movieId.length === 24) {
-			movie = await Movie.findById(movieId);
-		} else {
-			movie = await Movie.findOne({ tmdbId: movieId });
-		}
-
 		if (!movie) {
-			const movieResponse = await axios.get(
-				`https://api.themoviedb.org/3/movie/${movieId}`,
-				{
-					params: { api_key: TMDB_API_KEY, language: "en-US" },
-				}
-			);
-
-			const movieData = movieResponse.data;
-
-			const castResponse = await axios.get(
-				`https://api.themoviedb.org/3/movie/${movieId}/credits`,
-				{
-					params: { api_key: TMDB_API_KEY, language: "en-US" },
-				}
-			);
-
-			const actors = castResponse.data.cast
-				.slice(0, 5)
-				.map((actor) => actor.name);
-
-			const director = castResponse.data.crew.find(
-				(person) => person.job === "Director"
-			);
-
-			const directorName = director ? director.name : "Unknown";
-
-			movie = new Movie({
-				tmdbId: movieData.id,
-				title: movieData.title,
-				releaseYear: parseInt(movieData.release_date.split("-")[0]),
-				directedBy: directorName,
-				runtime: movieData.runtime,
-				genre: movieData.genres.map((genre) => genre.name),
-				actors,
-				posterUrl: `https://image.tmdb.org/t/p/w500${movieData.poster_path}`,
-			});
-
-			await movie.save();
+			return res.status(404).json({ message: "Movie not found in database" });
 		}
 
-		const movieExistsInList = list.movies.some(
-			(existingMovieId) => existingMovieId.toString() === movie._id.toString()
-		);
-
-		if (movieExistsInList) {
+		if (list.movies.includes(movie._id)) {
 			return res.status(400).json({ message: "Movie already in the list" });
 		}
 
 		list.movies.push(movie._id);
 		await list.save();
+
+		await ActivityTracker.create({
+			user: userId,
+			activity: "added_to_list",
+			targetMovie: movie._id,
+			targetList: list._id,
+		});
 
 		res.status(200).json({ message: "Movie added to list", list });
 	} catch (error) {
