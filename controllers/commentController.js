@@ -41,3 +41,45 @@ exports.addComment = async (req, res) => {
 		res.status(500).json({ message: "Error adding comment" });
 	}
 };
+
+exports.deleteComment = async (req, res) => {
+	try {
+		const { commentId } = req.params;
+		const userId = req.user.userId;
+
+		if (!commentId || !userId) {
+			return res.status(400).json({ message: "Comment or user ID missing" });
+		}
+
+		const comment = await Comment.findById(commentId);
+
+		if (!comment) {
+			return res.status(404).json({ message: "Comment not found" });
+		}
+
+		if (comment.user.toString() !== userId) {
+			return res
+				.status(403)
+				.json({ message: "Unauthorized to delete this comment" });
+		}
+
+		await comment.deleteOne();
+
+		await Movie.findByIdAndUpdate(comment.movie, {
+			$pull: { comments: commentId },
+		});
+
+		await User.findByIdAndUpdate(userId, {
+			$pull: { comments: commentId },
+		});
+
+		await ActivityTracker.findOneAndDelete({
+			comment: commentId,
+		});
+
+		res.status(204).json();
+	} catch (error) {
+		console.error(error);
+		res.status(500).json({ message: "Error adding comment" });
+	}
+};
