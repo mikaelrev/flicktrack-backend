@@ -31,7 +31,7 @@ exports.getAllUserLists = async (req, res) => {
 
 		const lists = await List.find({ owner: userId }).populate(
 			"movies",
-			"title posterUrl"
+			"tmdbId title posterUrl"
 		);
 
 		res.status(200).json({ message: "success", lists });
@@ -48,7 +48,7 @@ exports.getSingleList = async (req, res) => {
 		const listId = req.params.listId;
 
 		const list = await List.findOne({ _id: listId })
-			.populate("movies", "title posterUrl")
+			.populate("movies", "tmdbId title posterUrl")
 			.populate("owner", "username");
 
 		console.log(list);
