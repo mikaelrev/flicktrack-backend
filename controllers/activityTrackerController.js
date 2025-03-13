@@ -4,7 +4,7 @@ exports.getAllActivities = async (req, res) => {
 	try {
 		const activities = await ActivityTracker.find()
 			.populate("user", "username profileImage")
-			.populate("targetMovie", "title posterUrl")
+			.populate("targetMovie", "tmdbId title posterUrl")
 			.populate("targetList", "name")
 			.populate("comment", "content createdAt");
 		res.status(200).json({ message: "success", activities });
