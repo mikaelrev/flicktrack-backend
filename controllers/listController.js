@@ -187,8 +187,7 @@ exports.addMovieToList = async (req, res) => {
 
 exports.removeMovieFromList = async (req, res) => {
 	try {
-		const movieId = req.params.movieId;
-		const listId = req.params.listId;
+		const { movieId, listId } = req.params;
 		const userId = req.user.userId;
 
 		if (!movieId || !listId || !userId) {
@@ -206,6 +205,12 @@ exports.removeMovieFromList = async (req, res) => {
 
 		if (!list) {
 			return res.status(404).json({ message: "No list was found" });
+		}
+
+		if (list.owner.toString() !== userId) {
+			return res.status(403).json({
+				message: "You do not have permission to remove movies from this list",
+			});
 		}
 
 		const movieIndex = list.movies.findIndex(
