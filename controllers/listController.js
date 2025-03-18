@@ -263,6 +263,10 @@ exports.deleteList = async (req, res) => {
 
 		await list.deleteOne();
 
+		await User.findByIdAndUpdate(userId, { $pull: { lists: listId } });
+
+		await ActivityTracker.deleteMany({ targetList: listId });
+
 		res.status(204).json();
 	} catch (error) {
 		console.error(error);

@@ -13,10 +13,7 @@ app.use(express.json());
 const cors = require("cors");
 app.use(cors());
 
-const DB = process.env.DATABASE.replace(
-	"<PASSWORD>",
-	process.env.DATABASE_PASSWORD
-);
+const DB = process.env.DATABASE;
 
 mongoose
 	.connect(DB)
